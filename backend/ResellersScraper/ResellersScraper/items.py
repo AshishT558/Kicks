@@ -6,7 +6,12 @@
 import scrapy
 
 
-class ResellersscraperItem(scrapy.Item):
+class ShoeProduct(scrapy.Item):
     # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+    name = scrapy.Field()
+    price = scrapy.Field()
+    link = scrapy.Field()
+    image = scrapy.Field()
+    gender = scrapy.Field()
+    sale_price = scrapy.Field()
+    

@@ -3,10 +3,11 @@ from scrapy.crawler import CrawlerProcess
 from scrapy_selenium import SeleniumRequest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from items import ShoeProduct
 
 class UnderArmourSpider(scrapy.Spider):
     name = 'UnderArmourSpider'
-    shoe_name = "slipspeed"
+    shoe_name = "Men's UA Micro G® Valsetz Tactical Boots"
     start_urls = [f"https://www.underarmour.com/en-us/search/?q={shoe_name}"]
 
     def start_requests(self):
@@ -33,6 +34,7 @@ class UnderArmourSpider(scrapy.Spider):
         # self.logger.info(f"Found {len(products)} products")
 
         for product in products:
+            item = ShoeProduct()
             try:
                 # Get Gender
                 title = product.css('a.ProductTile_product-item-link__tSc19::text').get()
@@ -45,31 +47,35 @@ class UnderArmourSpider(scrapy.Spider):
                 else:
                     gender = "Unknown"
 
-                # # Check for sales price
-                # item_sale_element = product.css('span.bfx-price.bfx-sale-price::text')
-                # if item_sale_element:
-                #     price = item_sale_element.replace('$', '')
-                # else:
-                #     #use default price if no sale is present
-                #     price = product.css('span.bfx-price.bfx-list-price::text').get().replace('$', '')
+                # Check for sales price and get regular price as well
+                item_sale_element = product.css('span.bfx-price.bfx-sale-price::text').get()
+                regular_price = product.css('span.bfx-price.bfx-list-price::text').get().replace('$', '')
+                if item_sale_element is not None:
+                    sales_price = item_sale_element.replace('$', '')
+                else:
+                    # Use default price if no sale is present
+                    sales_price = regular_price
 
-                yield {
-                    'Name': title,
-                    'Price': product.css('span.bfx-price.bfx-list-price::text').get().replace('$', ''),
-                    'Link': product.css('a.ProductTile_product-item-link__tSc19').attrib['href'],
-                    'Image': product.css('img.Image_responsive_image__Hsr2N').attrib['src'],
-                    'Gender': gender
-                }
+
+                
+                item['name'] = title
+                item['price'] = regular_price
+                item['link'] = product.css('a.ProductTile_product-item-link__tSc19').attrib['href']
+                item['image'] = product.css('img.Image_responsive_image__Hsr2N').attrib['src']
+                item['gender'] = gender
+                item['sale_price'] = sales_price
+                yield item
+                
             except Exception as e:
                 #Commented out Debugging
                 # self.logger.error(f"Error parsing product: {e}")
-                yield {
-                    'Name': 'No data',
-                    'Price': 'No data',
-                    'Link': 'No data',
-                    'Image': 'No data',
-                    'Gender': 'No data'
-                }
+                item['name'] = 'No Data'
+                item['price'] = 'No Data'
+                item['link'] = 'No Data'
+                item['image'] = 'No Data'
+                item['gender'] = 'No Data'
+                item['sale_price'] = 'No Data'
+                yield item
 
         next_page = response.css('a[aria-label="Go to the next page"]::attr(href)').get()
         if next_page:
@@ -94,11 +100,12 @@ process = CrawlerProcess(settings={
         'scrapy_selenium.SeleniumMiddleware': 800
     },
     'FEEDS': {
-        'backend/ResellersScraper/results.json': {
+        'backend/ResellersScraper/UA-results.json': {
             'format': 'json',
             'encoding': 'utf8',
             'store_empty': False,
             'indent': 4,
+            'overwrite': True,
         },
     },
     'LOG_LEVEL': 'INFO',

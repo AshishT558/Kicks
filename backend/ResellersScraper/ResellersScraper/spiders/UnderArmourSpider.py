@@ -7,14 +7,14 @@ from items import ShoeProduct
 
 class UnderArmourSpider(scrapy.Spider):
     name = 'UnderArmourSpider'
-    shoe_name = "Men's UA Micro G® Valsetz Tactical Boots"
+    shoe_name = "Unisex UA Fat Tire Venture Pro Shoes"
     start_urls = [f"https://www.underarmour.com/en-us/search/?q={shoe_name}"]
 
     def start_requests(self):
         for url in self.start_urls:
             yield SeleniumRequest(
                 url=url, 
-                callback=self.parse, 
+                callback=self.parse,
                 wait_time=5,
                 wait_until=EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.false.ProductTile_product-tile-container__flx2K.module__primary-img.false.ProductTile_split-view-enabled__eCRsC"))
             )
@@ -42,10 +42,12 @@ class UnderArmourSpider(scrapy.Spider):
                     gender = "Men"
                 elif "women's" in title.casefold():
                     gender = "Women"
-                elif "unisex" in title.casefold():
-                    gender = "Unisex"
+                elif "boy's" in title.casefold():
+                    gender = "Kids"
+                elif "girl's" in title.casefold():
+                    gender = "Kids"
                 else:
-                    gender = "Unknown"
+                    gender = "Unisex"
 
                 # Check for sales price and get regular price as well
                 item_sale_element = product.css('span.bfx-price.bfx-sale-price::text').get()
@@ -59,22 +61,22 @@ class UnderArmourSpider(scrapy.Spider):
 
                 
                 item['name'] = title
-                item['price'] = regular_price
                 item['link'] = product.css('a.ProductTile_product-item-link__tSc19').attrib['href']
                 item['image'] = product.css('img.Image_responsive_image__Hsr2N').attrib['src']
-                item['gender'] = gender
+                item['original_price'] = regular_price
                 item['sale_price'] = sales_price
+                item['gender'] = gender
                 yield item
                 
             except Exception as e:
                 #Commented out Debugging
                 # self.logger.error(f"Error parsing product: {e}")
                 item['name'] = 'No Data'
-                item['price'] = 'No Data'
                 item['link'] = 'No Data'
                 item['image'] = 'No Data'
-                item['gender'] = 'No Data'
+                item['original_price'] = 'No Data'
                 item['sale_price'] = 'No Data'
+                item['gender'] = 'No Data'
                 yield item
 
         next_page = response.css('a[aria-label="Go to the next page"]::attr(href)').get()
@@ -90,7 +92,7 @@ class UnderArmourSpider(scrapy.Spider):
             )
         else:
             self.logger.info("No more pages found")
-
+        
 # Setup the process and run the spider
 process = CrawlerProcess(settings={
     'SELENIUM_DRIVER_NAME': 'chrome',

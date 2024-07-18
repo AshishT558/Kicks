@@ -9,7 +9,7 @@ import scrapy
 class ShoeProduct(scrapy.Item):
     # define the fields for your item here like:
     name = scrapy.Field()
-    price = scrapy.Field()
+    original_price = scrapy.Field()
     link = scrapy.Field()
     image = scrapy.Field()
     gender = scrapy.Field()

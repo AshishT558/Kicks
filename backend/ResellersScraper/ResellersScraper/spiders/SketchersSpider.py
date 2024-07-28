@@ -2,8 +2,8 @@ import scrapy
 from scrapy.crawler import CrawlerProcess
 from items import ShoeProduct
 
-class SketchersSpider(scrapy.Spider):
-    name = 'SketchersSpider'
+class SkechersSpider(scrapy.Spider):
+    name = 'SkechersSpider'
     shoe_name = "cali breeze"
     start_urls = [f"https://www.skechers.com/search/?q={shoe_name}"]
 
@@ -26,10 +26,10 @@ class SketchersSpider(scrapy.Spider):
             try:
                 # Get Gender
                 gender_tag = product.css('div.c-product-tile__gender::text').get().strip()
-                if "men's" in gender_tag.casefold():
-                    gender = "Men"
-                elif "women's" in gender_tag.casefold():
+                if "women's" in gender_tag.casefold():
                     gender = "Women"
+                elif "men's" in gender_tag.casefold():
+                    gender = "Men"
                 elif "boys'" in gender_tag.casefold():
                     gender = "Kids"
                 elif "girls'" in gender_tag.casefold():
@@ -88,7 +88,7 @@ class SketchersSpider(scrapy.Spider):
                 item['gender'] = 'No Data'
                 yield item
 
-        next_page = response.css('a.btn.btn-redesign.btn-primary-ghost.btn-md.col-12.col-sm-4').attrib['href']
+        next_page = response.css('a.btn.btn-redesign.btn-primary-ghost.btn-md.col-12.col-sm-4::attr(href)').get()
         if next_page is not None:
             #Commented out Debugging
             # self.logger.info(f"Next page: {next_page_url}")
@@ -99,7 +99,7 @@ class SketchersSpider(scrapy.Spider):
 # Setup the process and run the spider
 process = CrawlerProcess(settings={
     'FEEDS': {
-        'backend/ResellersScraper/Sketchers-results.json': {
+        'backend/ResellersScraper/Skechers-results.json': {
             'format': 'json',
             'encoding': 'utf8',
             'store_empty': False,
@@ -110,5 +110,5 @@ process = CrawlerProcess(settings={
     'LOG_LEVEL': 'INFO',
 })
 
-process.crawl(SketchersSpider)
+process.crawl(SkechersSpider)
 process.start()

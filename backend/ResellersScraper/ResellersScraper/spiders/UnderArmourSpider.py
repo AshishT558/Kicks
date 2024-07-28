@@ -38,10 +38,10 @@ class UnderArmourSpider(scrapy.Spider):
             try:
                 # Get Gender
                 title = product.css('a.ProductTile_product-item-link__tSc19::text').get()
-                if "men's" in title.casefold():
-                    gender = "Men"
-                elif "women's" in title.casefold():
+                if "women's" in title.casefold():
                     gender = "Women"
+                elif "men's" in title.casefold():
+                    gender = "Men"
                 elif "boy's" in title.casefold():
                     gender = "Kids"
                 elif "girl's" in title.casefold():
